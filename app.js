@@ -12,7 +12,7 @@ const app = express()
 // Initialize 
 const server = http.createServer(app)
 const wss = new WebSocket.Server({ noServer: true })
-const db = new Database('postgres://cymbunpcicyvez:52277196426faf6926a833537195648e3367fff54fc727a020b88d0fb85013db@ec2-52-86-223-172.compute-1.amazonaws.com:5432/d2imj1uvkhavnv')
+const db = new Database({ user: 'pi', host: 'localhost', database: 'home', password: 'qwaszx12', port: 5432 })
 
 const weekday = new Intl.DateTimeFormat('en', { weekday: 'short' })
 const time = new Intl.DateTimeFormat('en', { timeStyle: 'short', hour12: true })

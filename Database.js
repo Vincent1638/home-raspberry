@@ -5,15 +5,15 @@ const addAutomationQuery = 'INSERT INTO automations(enabled, trigger, sequence) 
 const updateAutomationQuery = 'UPDATE automations SET enabled = $2, trigger = $3, sequence = $4 WHERE id=$1 RETURNING *;'
 
 module.exports = class Database {
-    constructor(url) {
-        this.client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } })
+    constructor(data) {
+        this.client = new Client(data)
         this.client.connect()
     }
 
     updateUserMode(username, mode) {
         return this.client.query('UPDATE users SET mode = $2 WHERE username = $1', [username, mode])
     }
-    
+
     updateUserLayout(username, layout) {
         return this.client.query('UPDATE users SET layout = $2 WHERE username = $1', [username, layout])
     }
