@@ -1,0 +1,28 @@
+{
+  "name": "home-raspberry",
+  "version": "1.0.0",
+  "description": "Server for raspberry pi",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vincent1638/home-raspberry.git"
+  },
+  "author": "Adam Vincent",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vincent1638/home-raspberry/issues"
+  },
+  "homepage": "https://github.com/Vincent1638/home-raspberry#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "debug": "^2.6.9",
+    "express": "4.17.1",
+    "pg": "^8.7.1",
+    "tuyapi": "6.1.5",
+    "ws": "^7.5.2"
+  }
+}
