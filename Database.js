@@ -44,7 +44,7 @@ module.exports = class Database {
     }
 
     async deleteRow(table, id) {
-        return this.client.query(`DELETE FROM ${table} WHERE id=${id}`)
+        return this.client.query(`DELETE FROM ${table} WHERE id='${id}'`)
     }
 
     async upsertAutomation(automation) {

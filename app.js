@@ -216,7 +216,7 @@ function findNewDevices() {
                         if (ips[device.id]) {
                             foundDevices = true
                             return db.upsertDevice({
-                                type: 'outlet', name: device.name, image: 'outlet',
+                                type: 'outlet', name: [device.name], image: ['outlet'],
                                 ip: ips[device.id], key: device.key, id: device.id
                             }, false)
                         }
