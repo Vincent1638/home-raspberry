@@ -142,7 +142,7 @@ function handleMessage(ws, message, name) {
             break
         case 'updateSettings':
             json.removed.forEach(id => {
-                db.deleteRow('settings', id)
+                db.deleteRow('devices', id)
             })
             Promise.all(json.settings.map(device => {
                 return db.upsertDevice(device, false)
