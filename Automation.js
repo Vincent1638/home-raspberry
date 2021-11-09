@@ -50,9 +50,9 @@ module.exports = class Automation {
             let offset;
             let diff;
 
-            switch (automation.trigger) {
+            switch (automation.trigger.type) {
                 case 'sunset':
-                    offset = automation.offset * 1000 || 0;
+                    offset = automation.trigger.offset * 1000 || 0;
                     diff = sunset - date + offset;
 
                     if (diff > 0) {
@@ -63,7 +63,7 @@ module.exports = class Automation {
                     break;
 
                 case 'sunrise':
-                    offset = automation.offset * 1000 || 0;
+                    offset = automation.trigger.offset * 1000 || 0;
                     diff = sunrise - date + offset;
 
                     if (diff > 0) {
@@ -75,8 +75,8 @@ module.exports = class Automation {
 
                 case 'time':
                     let time = new Date(date);
-                    time.setHours(automation.time.split(':')[0]);
-                    time.setMinutes(automation.time.split(':')[1]);
+                    time.setHours(automation.trigger.time.split(':')[0]);
+                    time.setMinutes(automation.trigger.time.split(':')[1]);
                     time.setSeconds(0);
                     diff = time.getTime() - date;
 
@@ -93,13 +93,13 @@ module.exports = class Automation {
     static check(info, data) {
         const date = new Date();
         const time = date.getHours() + date.getMinutes() / 60;
-        Automation.automations.forEach(automation => {
-            if (automation.trigger == 'device' && automation.device == info.id && automation.state == data.state) {
-                const times = Automation.parseTimes(automation.time || '00:00 - 24:00')
+        Automation.automations.forEach(auto => {
+            if (auto.trigger.type == 'device' && auto.trigger.device == info.id && auto.trigger.state == data.state) {
+                const times = Automation.parseTimes(auto.trigger.time || '00:00 - 24:00')
                 if (times.start < times.end && times.start <= time && time <= times.end) {
-                    Automation.checkSequence(automation.sequence);
+                    Automation.checkSequence(auto.sequence);
                 } else if (times.start > times.end && (times.start <= time || time <= times.end)) {
-                    Automation.checkSequence(automation.sequence);
+                    Automation.checkSequence(auto.sequence);
                 }
             }
         })
