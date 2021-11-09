@@ -24,7 +24,7 @@ module.exports = class Database {
     }
 
     async getAutomations() {
-        const res = await this.client.query('SELECT * FROM automations')
+        const res = await this.client.query('SELECT * FROM automations ORDER BY id asc')
         return res.rows
     }
 
