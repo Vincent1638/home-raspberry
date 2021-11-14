@@ -124,7 +124,7 @@ function handleMessage(ws, message, name) {
                     Automation.check(sensor, { state: false })
                 }, 60000)
             }
-            broadcast({ type: 'sensor', id: json.id, state: json.state, data: sensor.data })
+            broadcast({ id: json.id, name: sensor.name, type: 'sensor', image: sensor.image, state: json.state, data: sensor.data })
             break
         case 'findDevices':
             findNewDevices().then(found => {
@@ -182,14 +182,20 @@ function getHerokuData() {
     Device.devices.forEach(({ info }) => {
         deviceData.push(info)
     })
+    const states = deviceData.concat(customDevices).map(d => {
+        return {
+            id: d.id,
+            name: d.name,
+            type: d.type,
+            image: d.image,
+            state: d.state,
+            brightness: d.brightness,
+            data: d.data,
+        }
+    })
     return JSON.stringify({
         event: 'homeData',
-        data: {
-            automations,
-            devices: tuyaDevices,
-            states: deviceData.concat(customDevices),
-
-        }
+        data: { automations, states, devices: tuyaDevices }
     })
 }
 
