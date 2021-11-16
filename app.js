@@ -1,6 +1,7 @@
 const credentials = require('./data/credentials.json')
 const { spawn } = require('child_process')
 const Automation = require('./Automation')
+const AppleHome = require('./AppleHome')
 const Database = require('./Database')
 const Device = require('./Device')
 const express = require('express')
@@ -13,6 +14,7 @@ const app = express()
 const server = http.createServer(app)
 const wss = new WebSocket.Server({ noServer: true })
 const db = new Database({ user: 'pi', host: 'localhost', database: 'home', password: 'qwaszx12', port: 5432 })
+const appleHome = new AppleHome('Bridge')
 
 const weekday = new Intl.DateTimeFormat('en', { weekday: 'short' })
 const time = new Intl.DateTimeFormat('en', { timeStyle: 'short', hour12: true })
@@ -254,11 +256,15 @@ async function startServer() {
     new Automation(automations)
     new Device(tuyaDevices)
 
+    appleHome.addAccessories(Device.devices.map(device => device.info))
+    appleHome.addAccessories(customDevices)
+
     Device.devices.forEach(device => {
         device.onData = (info, data) => {
             console.log(info.name, data)
             broadcast(info)
             Automation.check(info, data)
+            appleHome.updateAccessory(info)
         }
     })
 

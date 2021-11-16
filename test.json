@@ -1,0 +1,189 @@
+[
+    {
+        "id": "1008348750029118a8d2",
+        "name": "Garage Lights",
+        "type": "outlet",
+        "image": "lightbulb",
+        "state": false
+    },
+    {
+        "id": "eb1f41d493d93f3f40yciz",
+        "name": "Large Lamp",
+        "type": "outlet",
+        "image": "largelamp",
+        "state": false
+    },
+    {
+        "id": "2047276410521cd2dd89",
+        "name": "Dining Room Light",
+        "type": "dimmer",
+        "image": "ceiling",
+        "state": false,
+        "brightness": 100
+    },
+    {
+        "id": "6720861724a160073e6c0",
+        "name": "Bedroom Light 2",
+        "type": "multioutlet",
+        "image": "lamp",
+        "state": true
+    },
+    {
+        "id": "6720861724a160073e6c1",
+        "name": "Bedroom Fan",
+        "type": "multioutlet",
+        "image": "fan",
+        "state": false
+    },
+    {
+        "id": "8624750310521cd4466c",
+        "name": "Porch Light",
+        "type": "outlet",
+        "image": "lightbulb",
+        "state": false
+    },
+    {
+        "id": "8624750310521cfa48b2",
+        "name": "Hutch Light",
+        "type": "dimmer",
+        "image": "lightbulb",
+        "state": false,
+        "brightness": 400
+    },
+    {
+        "id": "8624750310521cfa750f",
+        "name": "Living Room Lights",
+        "type": "dimmer",
+        "image": "lightbulb",
+        "state": true,
+        "brightness": 500
+    },
+    {
+        "id": "86247503500291272a1e",
+        "name": "Kitchen Lights",
+        "type": "dimmer",
+        "image": "ceiling",
+        "state": false,
+        "brightness": 800
+    },
+    {
+        "id": "eb4fcfc50aa7231d57vgj2",
+        "name": "Bedroom Light 1",
+        "type": "outlet",
+        "image": "lamp",
+        "state": false
+    },
+    {
+        "id": "eb8910d5f494974e53y0lm",
+        "name": "Small Lamp",
+        "type": "outlet",
+        "image": "largelamp",
+        "state": false
+    },
+    {
+        "id": "ebc6ae7bbbbf49b53c4rhf",
+        "name": "Nightstand",
+        "type": "outlet",
+        "image": "outlet",
+        "state": false
+    },
+    {
+        "id": "ebf10a3f901dee6435y0ot",
+        "name": "Rock Light",
+        "type": "outlet",
+        "image": "lightbulb",
+        "state": false
+    },
+    {
+        "id": "button1",
+        "name": "Button 1",
+        "type": "button",
+        "image": "button",
+        "state": false,
+        "data": null
+    },
+    {
+        "id": "button2",
+        "name": "Button 2",
+        "type": "button",
+        "image": "button",
+        "state": false,
+        "data": null
+    },
+    {
+        "id": "button3",
+        "name": "Button 3",
+        "type": "button",
+        "image": "button",
+        "state": false,
+        "data": null
+    },
+    {
+        "id": "button4",
+        "name": "Button 4",
+        "type": "button",
+        "image": "button",
+        "state": false,
+        "data": null
+    },
+    {
+        "id": "door1",
+        "name": "Garage Door",
+        "type": "door",
+        "image": "door",
+        "data": null,
+        "key": null,
+        "ip": null,
+        "custom": true,
+        "state": false
+    },
+    {
+        "id": "door2",
+        "name": "Front Door",
+        "type": "door",
+        "image": "door",
+        "data": null,
+        "key": null,
+        "ip": null,
+        "custom": true,
+        "state": false
+    },
+    {
+        "id": "door3",
+        "name": "Patio Door",
+        "type": "door",
+        "image": "door",
+        "data": null,
+        "key": null,
+        "ip": null,
+        "custom": true,
+        "state": false
+    },
+    {
+        "id": "garage",
+        "name": "Garage",
+        "type": "garage",
+        "image": "garage",
+        "data": "Closed",
+        "key": null,
+        "ip": null,
+        "custom": true,
+        "state": false
+    },
+    {
+        "id": "sensor1",
+        "name": "Living Room Sensor",
+        "type": "sensor",
+        "image": "sensor",
+        "state": false,
+        "data": "Sun 4:46 PM"
+    },
+    {
+        "id": "sensor2",
+        "name": "Family Room Sensor",
+        "type": "sensor",
+        "image": "sensor",
+        "state": false,
+        "data": "Sun 4:29 PM"
+    }
+]
