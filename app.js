@@ -108,7 +108,7 @@ function handleMessage(ws, message, name) {
                 Automation.check(door, { state: json.state })
                 door.state = json.state
                 broadcast(door)
-                appleHome.updateAccessory(device)
+                appleHome.updateAccessory(door)
             }
             break
         case 'updateButton':
