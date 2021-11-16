@@ -268,7 +268,7 @@ async function startServer() {
         } else if (info.type === 'button') {
             console.log(info)
         } else {
-            Device.getDevice(json.id).command(info)
+            Device.getDevice(info.id).command(info)
         }
     }
 
