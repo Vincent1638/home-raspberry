@@ -264,11 +264,11 @@ async function startServer() {
     appleHome.addAccessories(customDevices)
     appleHome.onCommand = (info) => {
         if (info.type === 'garage' && garage.readyState === WebSocket.OPEN) {
-            garage.send(JSON.stringify(json))
+            garage.send(JSON.stringify(info))
         } else if (info.type === 'button') {
             console.log(info)
         } else {
-            Device.getDevice(json.id).command(json)
+            Device.getDevice(json.id).command(info)
         }
     }
 
