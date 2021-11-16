@@ -78,7 +78,7 @@ module.exports = class AppleHome {
             callback(undefined, info.state);
         });
         onCharacteristic.on(CharacteristicEventTypes.SET, (value, callback) => {
-            info.state = value;
+            this.onCommand({ type: 'dimmer', id: info.id, state: value })
             callback();
         });
 
@@ -87,7 +87,7 @@ module.exports = class AppleHome {
             callback(undefined, info.brightness / 10);
         });
         brightnessCharacteristic.on(CharacteristicEventTypes.SET, (value, callback) => {
-            info.brightness = value * 10;
+            this.onCommand({ type: 'dimmer', id: info.id, brightness: value * 10 })
             callback();
         });
 
@@ -105,7 +105,7 @@ module.exports = class AppleHome {
         });
 
         characteristic.on(CharacteristicEventTypes.SET, (value, callback) => {
-            info.state = value;
+            this.onCommand({ type: 'outlet', id: info.id, state: value })
             callback();
         });
 
@@ -149,7 +149,7 @@ module.exports = class AppleHome {
         });
 
         characteristic.on(CharacteristicEventTypes.SET, (value, callback) => {
-            info.state = value;
+            this.onCommand({ type: 'button', id: info.id, state: value })
             callback();
         });
 
@@ -179,7 +179,7 @@ module.exports = class AppleHome {
         });
 
         targetDoorState.on(CharacteristicEventTypes.SET, (value, callback) => {
-            info.state = value != 1;
+            this.onCommand({ type: 'garage', id: info.id, event: 'setGarage' })
             callback();
         });
 

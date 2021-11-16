@@ -99,6 +99,7 @@ function handleMessage(ws, message, name) {
                 device.data = json.state
                 device.state = !(json.state === 'Closed')
                 broadcast(device)
+                appleHome.updateAccessory(device)
             }
             break
         case 'updateDoor':
@@ -107,6 +108,7 @@ function handleMessage(ws, message, name) {
                 Automation.check(door, { state: json.state })
                 door.state = json.state
                 broadcast(door)
+                appleHome.updateAccessory(device)
             }
             break
         case 'updateButton':
@@ -114,7 +116,8 @@ function handleMessage(ws, message, name) {
             break
         case 'updateSensor':
             const sensor = getCustomDevice(json.id)
-            if (json.state) {
+            sensor.state = json.state
+            if (sensor.state) {
                 Automation.check(sensor, { state: true })
             } else {
                 const date = new Date
@@ -126,7 +129,8 @@ function handleMessage(ws, message, name) {
                     Automation.check(sensor, { state: false })
                 }, 60000)
             }
-            broadcast({ id: json.id, name: sensor.name, type: 'sensor', image: sensor.image, state: json.state, data: sensor.data })
+            broadcast(sensor)
+            appleHome.updateAccessory(sensor)
             break
         case 'findDevices':
             findNewDevices().then(found => {
@@ -160,6 +164,16 @@ function handleMessage(ws, message, name) {
         case 'updateMode':
             db.updateUserMode(json.user, json.mode)
             break
+    }
+}
+
+appleHome.onCommand = (info) => {
+    if (info.type === 'garage' && garage.readyState === WebSocket.OPEN) {
+        garage.send(JSON.stringify(json))
+    } else if (info.type === 'button') {
+        console.log(info)
+    } else {
+        Device.getDevice(json.id).command(json)
     }
 }
 
