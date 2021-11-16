@@ -33,7 +33,7 @@ module.exports = class AppleHome {
 
     updateAccessory(info) {
         const UUID = uuid.generate(info.id)
-        const accessory = bridge.bridgedAccessories.find(accessory => accessory.UUID === UUID)
+        const accessory = this.bridge.bridgedAccessories.find(accessory => accessory.UUID === UUID)
 
         if (info.type == 'dimmer') {
             const service = accessory.getService(Service.Lightbulb)
