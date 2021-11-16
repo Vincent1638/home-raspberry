@@ -179,7 +179,7 @@ module.exports = class AppleHome {
         });
 
         targetDoorState.on(CharacteristicEventTypes.SET, (value, callback) => {
-            this.onCommand({ type: 'garage', id: info.id, event: 'setGarage' })
+            this.onCommand({ type: 'garage', id: info.id, event: 'setGarage', open: value == 0})
             callback();
         });
 
