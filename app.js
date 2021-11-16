@@ -167,16 +167,6 @@ function handleMessage(ws, message, name) {
     }
 }
 
-appleHome.onCommand = (info) => {
-    if (info.type === 'garage' && garage.readyState === WebSocket.OPEN) {
-        garage.send(JSON.stringify(json))
-    } else if (info.type === 'button') {
-        console.log(info)
-    } else {
-        Device.getDevice(json.id).command(json)
-    }
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Ping WebSocket connections
 setInterval(() => {
@@ -272,6 +262,15 @@ async function startServer() {
 
     appleHome.addAccessories(Device.devices.map(device => device.info))
     appleHome.addAccessories(customDevices)
+    appleHome.onCommand = (info) => {
+        if (info.type === 'garage' && garage.readyState === WebSocket.OPEN) {
+            garage.send(JSON.stringify(json))
+        } else if (info.type === 'button') {
+            console.log(info)
+        } else {
+            Device.getDevice(json.id).command(json)
+        }
+    }
 
     Device.devices.forEach(device => {
         device.onData = (info, data) => {
