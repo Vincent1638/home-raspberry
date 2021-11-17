@@ -7,6 +7,7 @@ const Device = require('./Device')
 const express = require('express')
 const WebSocket = require('ws')
 const http = require('http')
+const { devices } = require('./Device')
 const app = express()
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,6 +42,11 @@ function broadcast(message) {
         heroku.send(JSON.stringify(message))
     }
 }
+
+app.get('/add', (req, res) => {
+    res.sendStatus(200)
+    findNewDevices()
+})
 
 ///////////////////////////////////////////////////////////////////////////////
 // Handle WebSocket connections
@@ -219,20 +225,35 @@ function findNewDevices() {
             }
             if (data.toString().match(/\[.*]/)) {
                 const foundDevices = JSON.parse(data.toString())
-                let newDevices = foundDevices.filter(device => !tuyaDevices.find(({ id }) => device.id === id))
+                const newDevices = foundDevices.filter(d => !tuyaDevices.find(({ id }) => d.id === id))
+                const deviceIps = await Device.findIps(newDevices[0])
+
+                console.log(deviceIps)
+
+                foundDevices.forEach(device => {
+                    const d = tuyaDevices.find(({ id }) => device.id === id)
+                    if (d && d.key !== device.key) {
+                        console.log('Update device key')
+                    } else if (d.key !== device.key) {
+                        console.log('New device found')
+                    }
+                })
+
+
+                // let newDevices = foundDevices.filter(device => !tuyaDevices.find(({ id }) => device.id === id))
                 if (newDevices.length > 0) {
-                    let foundDevices = false
-                    let ips = await Device.findIps(newDevices[0])
-                    await Promise.all(newDevices.map(device => {
-                        console.log('Found device:', JSON.stringify(device))
-                        if (ips[device.id]) {
-                            foundDevices = true
-                            return db.upsertDevice({
-                                type: 'outlet', name: [device.name], image: ['outlet'],
-                                ip: ips[device.id], key: device.key, id: device.id
-                            }, false)
-                        }
-                    }))
+                    //     let foundDevices = false
+                    //     let ips = await Device.findIps(newDevices[0])
+                    //     await Promise.all(newDevices.map(device => {
+                    //         console.log('Found device:', JSON.stringify(device))
+                    //         if (ips[device.id]) {
+                    //             foundDevices = true
+                    //             return db.upsertDevice({
+                    //                 type: 'outlet', name: [device.name], image: ['outlet'],
+                    //                 ip: ips[device.id], key: device.key, id: device.id
+                    //             }, false)
+                    //         }
+                    //     }))
                     resolve(foundDevices)
                 } else {
                     resolve(false)

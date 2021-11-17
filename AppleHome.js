@@ -2,9 +2,9 @@ const { Accessory, Characteristic, Categories, CharacteristicEventTypes, Service
 
 module.exports = class AppleHome {
     constructor(name) {
-        this.bridge = new Bridge(name, uuid.generate("bridge test"))
+        this.bridge = new Bridge(name, uuid.generate(name))
         this.bridge.publish({
-            username: "17:51:07:F4:BC:AE",
+            username: "17:51:07:F4:BC:AF",
             pincode: "111-22-333",
             port: 47129,
             category: Categories.BRIDGE
@@ -179,7 +179,7 @@ module.exports = class AppleHome {
         });
 
         targetDoorState.on(CharacteristicEventTypes.SET, (value, callback) => {
-            this.onCommand({ type: 'garage', id: info.id, event: 'setGarage', open: value == 0})
+            this.onCommand({ type: 'garage', id: info.id, event: 'setGarage', open: value == 0 })
             callback();
         });
 
