@@ -14,13 +14,8 @@ const app = express()
 // Initialize 
 const server = http.createServer(app)
 const wss = new WebSocket.Server({ noServer: true })
-const db = new Database({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
-})
-const appleHome = new AppleHome('Bridge')
+const db = new Database({ connectionString: credentials.postgres, ssl: { rejectUnauthorized: false } })
+const appleHome = new AppleHome('Bridge', '17:51:07:F4:BC:AE', '111-22-333')
 
 const weekday = new Intl.DateTimeFormat('en', { weekday: 'short' })
 const time = new Intl.DateTimeFormat('en', { timeStyle: 'short', hour12: true })

@@ -1,11 +1,11 @@
 const { Accessory, Characteristic, Categories, CharacteristicEventTypes, Service, Bridge, uuid } = require("hap-nodejs");
 
 module.exports = class AppleHome {
-    constructor(name) {
+    constructor(name, username, pincode) {
         this.bridge = new Bridge(name, uuid.generate(name))
         this.bridge.publish({
-            username: "17:51:07:F4:BC:AF",
-            pincode: "111-22-333",
+            username: username,
+            pincode: pincode,
             port: 47129,
             category: Categories.BRIDGE
         })
