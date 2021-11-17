@@ -7,7 +7,6 @@ const Device = require('./Device')
 const express = require('express')
 const WebSocket = require('ws')
 const http = require('http')
-const { devices } = require('./Device')
 const app = express()
 
 ///////////////////////////////////////////////////////////////////////////////
