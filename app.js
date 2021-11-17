@@ -45,7 +45,7 @@ function broadcast(message) {
 app.get('/add', async (req, res) => {
     const restart = await findNewDevices()
     res.send(restart ? 'Found new devices' : 'No new devices found')
-    process.exit(1)
+    if (restart) { process.exit(1) }
 })
 
 ///////////////////////////////////////////////////////////////////////////////
