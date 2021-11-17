@@ -42,9 +42,10 @@ function broadcast(message) {
     }
 }
 
-app.get('/add', (req, res) => {
-    res.sendStatus(200)
-    findNewDevices()
+app.get('/add', async (req, res) => {
+    const restart = await findNewDevices()
+    res.send(restart ? 'Found new devices' : 'No new devices found')
+    process.exit(1)
 })
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -213,6 +214,7 @@ function getHerokuData() {
 ///////////////////////////////////////////////////////////////////////////////
 // Scan for unregistered devices
 function findNewDevices() {
+    console.log('Searching for devices')
     return new Promise((resolve) => {
         const ls = spawn('tuya-cli', ['wizard', '-s'])
         ls.stdout.on('data', async (data) => {
@@ -223,40 +225,41 @@ function findNewDevices() {
                 ls.stdin.write('ebf10a3f901dee6435y0ot\n')
             }
             if (data.toString().match(/\[.*]/)) {
+                let restart = false
+                let deviceIps = []
+
                 const foundDevices = JSON.parse(data.toString())
                 const newDevices = foundDevices.filter(d => !tuyaDevices.find(({ id }) => d.id === id))
-                const deviceIps = await Device.findIps(newDevices[0])
 
-                console.log(deviceIps)
+                if (newDevices.length > 0) {
+                    console.log('Found new devices, serching for device IPs')
+                    deviceIps = await Device.findIps(newDevices[0])
+                }
 
+                const promises = []
                 foundDevices.forEach(device => {
                     const d = tuyaDevices.find(({ id }) => device.id === id)
-                    if (d && d.key !== device.key) {
-                        console.log('Update device key')
+                    if (d === undefined) {
+                        const ip = deviceIps[device.id]
+                        if (ip) {
+                            console.log('Adding new device:', device.name, deviceIps[device.id])
+                            promises.push(db.upsertDevice({
+                                type: 'outlet', name: [device.name], image: ['outlet'],
+                                ip: ips[device.id], key: device.key, id: device.id
+                            }, false))
+                            restart = true
+                        } else {
+                            console.log('Unable to find IP:', device.name)
+                        }
                     } else if (d.key !== device.key) {
-                        console.log('New device found')
+                        console.log('Update device key')
+                        promises.push(db.updateDevice(device.id, device.key))
+                        restart = true
                     }
                 })
 
-
-                // let newDevices = foundDevices.filter(device => !tuyaDevices.find(({ id }) => device.id === id))
-                if (newDevices.length > 0) {
-                    //     let foundDevices = false
-                    //     let ips = await Device.findIps(newDevices[0])
-                    //     await Promise.all(newDevices.map(device => {
-                    //         console.log('Found device:', JSON.stringify(device))
-                    //         if (ips[device.id]) {
-                    //             foundDevices = true
-                    //             return db.upsertDevice({
-                    //                 type: 'outlet', name: [device.name], image: ['outlet'],
-                    //                 ip: ips[device.id], key: device.key, id: device.id
-                    //             }, false)
-                    //         }
-                    //     }))
-                    resolve(foundDevices)
-                } else {
-                    resolve(false)
-                }
+                await Promise.all(promises)
+                resolve(restart)
             }
         })
     })

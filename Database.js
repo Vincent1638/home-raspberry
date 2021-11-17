@@ -39,8 +39,8 @@ module.exports = class Database {
         return res.rows[0]
     }
 
-    updateDevice(id, key, ip) {
-        return this.client.query('UPDATE devices SET key = $2 id = $3 WHERE id = $1', [id, key, ip])
+    updateDeviceKey(id, key, ip) {
+        return this.client.query('UPDATE devices SET key = $2 WHERE id = $1', [id, key])
     }
 
     updateDeviceData(id, data) {
