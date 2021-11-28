@@ -153,10 +153,6 @@ function handleMessage(ws, message, name) {
                 return db.upsertDevice(device, false)
             })).then(() => process.exit(1))
             break
-        case 'getUserData':
-            db.getUserData(json.username)
-                .then(data => broadcast({ event: 'userData', resId: json.resId, data }))
-            break
         case 'updateLayout':
             db.updateUserLayout(json.user, json.layout)
             break
