@@ -153,12 +153,6 @@ function handleMessage(ws, message, name) {
                 return db.upsertDevice(device, false)
             })).then(() => process.exit(1))
             break
-        case 'updateLayout':
-            db.updateUserLayout(json.user, json.layout)
-            break
-        case 'updateMode':
-            db.updateUserMode(json.user, json.mode)
-            break
     }
 }
 
