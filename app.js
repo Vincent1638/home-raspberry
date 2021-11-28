@@ -275,7 +275,7 @@ async function startServer() {
     customDevices.forEach(d => {
         d.name = d.name[0]
         d.image = d.image[0]
-        d.state = true
+        d.state = false
     })
 
     new Automation(automations)
