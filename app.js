@@ -228,7 +228,7 @@ function findNewDevices() {
                             console.log('Adding new device:', device.name, deviceIps[device.id])
                             promises.push(db.upsertDevice({
                                 type: 'outlet', name: [device.name], image: ['outlet'],
-                                ip: ips[device.id], key: device.key, id: device.id
+                                ip: deviceIps[device.id], key: device.key, id: device.id
                             }, false))
                             restart = true
                         } else {
