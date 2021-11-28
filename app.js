@@ -275,7 +275,7 @@ async function startServer() {
     customDevices.forEach(d => {
         d.name = d.name[0]
         d.image = d.image[0]
-        if (d.type === 'sensor' || d.type === 'button' || d.type === 'button') {
+        if (d.type === 'sensor' || d.type === 'button' || d.type === 'door') {
             d.state = false
         }
     })
