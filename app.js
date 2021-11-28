@@ -102,8 +102,8 @@ function handleMessage(ws, message, name) {
         case 'updateGarage':
             let device = getCustomDevice('garage')
             if (device) {
-                device.data = json.state
-                device.state = !(json.state === 'Closed')
+                device.data = json.data
+                device.state = json.state
                 broadcast(device)
                 appleHome.updateAccessory(device)
             }
