@@ -20,7 +20,6 @@ const weekday = new Intl.DateTimeFormat('en', { weekday: 'short' })
 const time = new Intl.DateTimeFormat('en', { timeStyle: 'short', hour12: true })
 
 let customDevices = []
-let sensorTimeout = {}
 let automations = []
 let tuyaDevices = []
 let heroku = {}
@@ -123,18 +122,12 @@ function handleMessage(ws, message, name) {
         case 'updateSensor':
             const sensor = getCustomDevice(json.id)
             sensor.state = json.state
-            if (sensor.state) {
-                Automation.check(sensor, { state: true })
-            } else {
+            if (!sensor.state) {
                 const date = new Date
                 sensor.data = weekday.format(date) + ' ' + time.format(date)
                 db.updateDeviceData(sensor.id, sensor.data)
-                clearTimeout(sensorTimeout[sensor.id])
-                sensorTimeout[sensor.id] = setTimeout(() => {
-                    console.log(sensor.name, { state: false })
-                    Automation.check(sensor, { state: false })
-                }, 60000)
             }
+            Automation.check(sensor, { state: sensor.state })
             broadcast(sensor)
             appleHome.updateAccessory(sensor)
             break
