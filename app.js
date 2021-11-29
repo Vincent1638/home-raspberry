@@ -82,7 +82,7 @@ server.on('upgrade', function upgrade(request, socket, head) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Handle WebSocket messages
-function handleMessage(ws, message, name) {
+async function handleMessage(ws, message, name) {
     const json = JSON.parse(message)
     console.log(name, json)
     switch (json.event) {
@@ -137,22 +137,85 @@ function handleMessage(ws, message, name) {
             })
             break
         case 'updateAutomations':
-            json.removed.forEach(id => {
-                db.deleteAutomation(id)
+            json.removed.forEach(async id => {
+                await db.deleteAutomation(id)
             })
-            Promise.all(json.automations.map(auto => {
+            await Promise.all(json.automations.map(auto => {
                 return db.upsertAutomation(auto)
-            })).then(() => process.exit(1))
-            break
+            }))
+            process.exit(1)
         case 'updateSettings':
-            json.removed.forEach(id => {
-                db.deleteDevice(id)
+            json.removed.forEach(async id => {
+                await updateAutomaitonDevices(id)
+                await db.deleteDevice(id)
             })
-            Promise.all(json.settings.map(device => {
+            await Promise.all(json.settings.map(device => {
                 return db.upsertDevice(device, false)
-            })).then(() => process.exit(1))
-            break
+            }))
+            process.exit(1)
     }
+}
+
+const updateAutomaitonDevices = async (id) => {
+    const updates = []
+    automations.forEach(auto => {
+        const test = checkSequence(auto.sequence, id)
+        console.log(test)
+        // if (auto.trigger.device === id || test === 0) {
+        //     updates.push(db.deleteAutomation(auto.id))
+        // } else if (test === 1) {
+        //     updates.push(db.upsertAutomation(auto))
+        // }
+    })
+    return Promise.all(updates)
+}
+
+const checkSequence = (sequence, id) => {
+    const removeIndexs = []
+    let update = false
+    sequence.forEach((entry, i) => {
+        switch (entry.type) {
+            case 'if':
+                if (entry.if.device === id) {
+                    removeIndexs.push(i)
+                } else {
+                    const c = checkSequence(entry.then, id)
+                    if (c === 0) removeIndexs.push(i)
+                    else if (c === 1) update = true
+                }
+                break
+            case 'ifElse':
+                if (entry.if.device === id) {
+                    removeIndexs.push(i)
+                } else {
+                    const c1 = checkSequence(entry.then, id)
+                    const c2 = checkSequence(entry.else, id)
+                    if (c1 === 0 || c2 === 0) removeIndexs.push(i)
+                    else if (c1 === 1 || c2 === 1) update = true
+                }
+                break
+            case 'device':
+                if (entry.device.includes(id)) {
+                    if (entry.device.length > 1) {
+                        const index = entry.device.find(d => d === id)
+                        entry.device.splice(index, 1)
+                        update = true
+                    } else {
+                        removeIndexs.push(i)
+                    }
+                }
+                break
+        }
+    })
+    if (removeIndexs.length > 0) {
+        removeIndexs.reverse().forEach(i => sequence.splice(i, 1))
+        update = true
+    }
+
+    // update: 1, delete: 0, do nothing: -1
+    if (update && sequence.length > 0) return 1
+    if (sequence.length === 0) return 0
+    return -1
 }
 
 ///////////////////////////////////////////////////////////////////////////////
