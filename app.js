@@ -3,6 +3,7 @@ const { spawn } = require('child_process')
 const Automation = require('./Automation')
 const AppleHome = require('./AppleHome')
 const Database = require('./Database')
+const { getUserDataTest } = require('./Firestore')
 const Device = require('./Device')
 const express = require('express')
 const WebSocket = require('ws')
@@ -251,6 +252,8 @@ function findNewDevices() {
 ///////////////////////////////////////////////////////////////////////////////
 // Start server
 async function startServer() {
+    console.log(await getUserDataTest('adamvincent'))
+
     tuyaDevices = await db.getDevices(false)
     customDevices = await db.getDevices(true)
     automations = await db.getAutomations()
