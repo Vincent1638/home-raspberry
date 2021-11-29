@@ -160,12 +160,11 @@ const updateAutomaitonDevices = async (id) => {
     const updates = []
     automations.forEach(auto => {
         const test = checkSequence(auto.sequence, id)
-        console.log(test)
-        // if (auto.trigger.device === id || test === 0) {
-        //     updates.push(db.deleteAutomation(auto.id))
-        // } else if (test === 1) {
-        //     updates.push(db.upsertAutomation(auto))
-        // }
+        if (auto.trigger.device === id || test === 0) {
+            updates.push(db.deleteAutomation(auto.id))
+        } else if (test === 1) {
+            updates.push(db.upsertAutomation(auto))
+        }
     })
     return Promise.all(updates)
 }
