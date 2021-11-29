@@ -1,65 +1,66 @@
-const { Client } = require('pg')
+const { initializeApp, cert } = require('firebase-admin/app')
+const { getFirestore } = require('firebase-admin/firestore')
 
-const upsertDeviceQuery = 'INSERT INTO devices(id, type, name, image, key, ip, data, custom) VALUES($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO UPDATE SET type = $2, name = $3, image = $4, key = $5, ip = $6, data = $7 RETURNING *;'
-const addAutomationQuery = 'INSERT INTO automations(enabled, trigger, sequence) VALUES($1, $2, $3) RETURNING *;'
-const updateAutomationQuery = 'UPDATE automations SET enabled = $2, trigger = $3, sequence = $4 WHERE id=$1 RETURNING *;'
+initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_CREDENTIALS)) })
 
-module.exports = class Database {
-    constructor(data) {
-        this.client = new Client(data)
-        this.client.connect()
+const db = getFirestore()
+const usersRef = db.collection('users')
+const devicesRef = db.collection('devices')
+const automationsRef = db.collection('automations')
+
+
+const updateUserData = (username, data) => {
+    return usersRef.doc(username).update(data)
+}
+
+const getUserData = async (username) => {
+    const doc = await usersRef.doc(username).get()
+    return doc.data();
+}
+
+const getDevices = async (custom) => {
+    const snapshot = await devicesRef.where('custom', '==', custom).get()
+    return snapshot.docs.map(doc => doc.data())
+}
+
+const upsertDevice = async (device, custom) => {
+    return devicesRef.doc(device.id).set({ ...device, custom }, { merge: true })
+}
+
+const deleteDevice = (id) => {
+    return devicesRef.doc(id).delete()
+}
+
+const updateDeviceInfo = (id, info) => {
+    return devicesRef.doc(id).update(info)
+}
+
+const getAutomations = async () => {
+    const snapshot = await automationsRef.get()
+    return snapshot.docs.map(doc => doc.data())
+}
+
+const deleteAutomation = (id) => {
+    return automationsRef.doc(id).delete()
+}
+
+const upsertAutomation = async (automation) => {
+    if (automation.id !== '') {
+        return automationsRef.doc(automation.id).set(automation)
+    } else {
+        const { id } = await automationsRef.add(automation)
+        return automationsRef.doc(id).update({ id })
     }
+}
 
-    updateUserMode(username, mode) {
-        return this.client.query('UPDATE users SET mode = $2 WHERE username = $1', [username, mode])
-    }
-
-    updateUserLayout(username, layout) {
-        return this.client.query('UPDATE users SET layout = $2 WHERE username = $1', [username, layout])
-    }
-
-    async getUserData(username) {
-        const res = await this.client.query('SELECT * FROM users WHERE username = $1 LIMIT 1', [username])
-        return res.rows[0]
-    }
-
-    async getAutomations() {
-        const res = await this.client.query('SELECT * FROM automations ORDER BY id asc')
-        return res.rows
-    }
-
-    async getDevices(custom) {
-        const res = await this.client.query('SELECT * FROM devices WHERE custom=$1', [custom])
-        return res.rows
-    }
-
-    async upsertDevice(device, custom) {
-        const values = [device.id, device.type, device.name, device.image, device.key, device.ip, device.data, custom]
-        const res = await this.client.query(upsertDeviceQuery, values)
-        return res.rows[0]
-    }
-
-    updateDeviceKey(id, key, ip) {
-        return this.client.query('UPDATE devices SET key = $2 WHERE id = $1', [id, key])
-    }
-
-    updateDeviceData(id, data) {
-        return this.client.query('UPDATE devices SET data = $2 WHERE id = $1', [id, data])
-    }
-
-    async deleteRow(table, id) {
-        return this.client.query(`DELETE FROM ${table} WHERE id='${id}'`)
-    }
-
-    async upsertAutomation(automation) {
-        let res
-        if (automation.id && automation.id !== '') {
-            const values = [automation.id, automation.enabled, automation.trigger, automation.sequence]
-            res = await this.client.query(updateAutomationQuery, values)
-        } else {
-            const values = [automation.enabled, automation.trigger, automation.sequence]
-            res = await this.client.query(addAutomationQuery, values)
-        }
-        return res.rows[0]
-    }
+module.exports = {
+    updateUserData,
+    getUserData,
+    getDevices,
+    upsertDevice,
+    deleteDevice,
+    updateDeviceInfo,
+    getAutomations,
+    upsertAutomation,
+    deleteAutomation,
 }

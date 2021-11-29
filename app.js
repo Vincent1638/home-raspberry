@@ -2,7 +2,7 @@ const credentials = require('./data/credentials.json')
 const { spawn } = require('child_process')
 const Automation = require('./Automation')
 const AppleHome = require('./AppleHome')
-const Database = require('./Database')
+const db = require('./Database')
 const Device = require('./Device')
 const express = require('express')
 const WebSocket = require('ws')
@@ -13,7 +13,6 @@ const app = express()
 // Initialize 
 const server = http.createServer(app)
 const wss = new WebSocket.Server({ noServer: true })
-const db = new Database({ connectionString: credentials.postgres, ssl: { rejectUnauthorized: false } })
 const appleHome = new AppleHome('Bridge', '17:51:07:F4:BC:AE', '111-22-333')
 
 const weekday = new Intl.DateTimeFormat('en', { weekday: 'short' })
@@ -99,7 +98,7 @@ function handleMessage(ws, message, name) {
             }
             break
         case 'updateGarage':
-            let device = getCustomDevice('garage')
+            let device = db.getCustomDevice('garage')
             if (device) {
                 device.data = json.data
                 device.state = json.state
@@ -125,7 +124,7 @@ function handleMessage(ws, message, name) {
             if (!sensor.state) {
                 const date = new Date
                 sensor.data = weekday.format(date) + ' ' + time.format(date)
-                db.updateDeviceData(sensor.id, sensor.data)
+                db.updateDeviceInfo(sensor.id, { data: sensor.data })
             }
             Automation.check(sensor, { state: sensor.state })
             broadcast(sensor)
@@ -139,7 +138,7 @@ function handleMessage(ws, message, name) {
             break
         case 'updateAutomations':
             json.removed.forEach(id => {
-                db.deleteRow('automations', id)
+                db.deleteAutomation(id)
             })
             Promise.all(json.automations.map(auto => {
                 return db.upsertAutomation(auto)
@@ -147,7 +146,7 @@ function handleMessage(ws, message, name) {
             break
         case 'updateSettings':
             json.removed.forEach(id => {
-                db.deleteRow('devices', id)
+                db.deleteDevice(id)
             })
             Promise.all(json.settings.map(device => {
                 return db.upsertDevice(device, false)
@@ -236,7 +235,7 @@ function findNewDevices() {
                         }
                     } else if (d.key !== device.key) {
                         console.log('Update device key')
-                        promises.push(db.updateDevice(device.id, device.key))
+                        promises.push(db.updateDeviceInfo(device.id, { key: device.key }))
                         restart = true
                     }
                 })
