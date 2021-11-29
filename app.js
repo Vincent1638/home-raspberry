@@ -98,7 +98,7 @@ function handleMessage(ws, message, name) {
             }
             break
         case 'updateGarage':
-            let device = db.getCustomDevice('garage')
+            let device = getCustomDevice('garage')
             if (device) {
                 device.data = json.data
                 device.state = json.state
