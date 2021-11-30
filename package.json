@@ -23,7 +23,6 @@
     "express": "4.17.1",
     "firebase-admin": "^10.0.0",
     "hap-nodejs": "^0.9.7",
-    "pg": "^8.7.1",
     "tuyapi": "6.1.5",
     "ws": "^7.5.2"
   }
