@@ -25,7 +25,6 @@ module.exports = class Device {
         })
         tuya.on('error', () => {
             console.log('Error:', info.id)
-            setTimeout(() => tuya.start(), 20000)
         })
         tuya.start()
 
