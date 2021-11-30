@@ -320,6 +320,7 @@ async function startServer() {
         d.name = d.name[0]
         d.image = d.image[0]
         d.state = false
+        delete d.state
     })
 
     new Automation(automations)
