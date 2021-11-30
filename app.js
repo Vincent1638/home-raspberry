@@ -22,7 +22,14 @@ let customDevices = []
 let automations = []
 let tuyaDevices = []
 let heroku = {}
-let garage = {}
+let garage = {
+    ws: {},
+    send(data) {
+        if (this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(data))
+        }
+    }
+}
 
 startServer()
 
@@ -69,7 +76,7 @@ server.on('upgrade', function upgrade(request, socket, head) {
     const deviceId = url.searchParams.get('id')
     if (deviceId === 'garage') {
         wss.handleUpgrade(request, socket, head, function done(ws) {
-            garage = ws
+            garage.ws = ws
             wss.emit('connection', ws, request, 'Garage')
         })
     } else {
@@ -93,9 +100,7 @@ async function handleMessage(ws, message, name) {
             Device.getDevice(json.id).command(json)
             break
         case 'setGarage':
-            if (garage.readyState === WebSocket.OPEN) {
-                garage.send(JSON.stringify(json))
-            }
+            garage.send(json)
             break
         case 'updateGarage':
             let device = getCustomDevice('garage')
@@ -329,8 +334,8 @@ async function startServer() {
     appleHome.addAccessories(Device.devices.map(device => device.info))
     appleHome.addAccessories(customDevices)
     appleHome.onCommand = (info) => {
-        if (info.type === 'garage' && garage.readyState === WebSocket.OPEN) {
-            garage.send(JSON.stringify(info))
+        if (info.type === 'garage') {
+            garage.send(info)
         } else if (info.type === 'button') {
             console.log(info)
         } else {
