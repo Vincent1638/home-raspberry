@@ -15,7 +15,7 @@ module.exports = class Device {
             try {
                 await this.find()
                 await this.connect()
-                this.refresh().then(status => console.log(status))
+                tuya.refresh().then(status => console.log(status))
             } catch (e) {
                 setTimeout(() => this.start(), 20000)
             }
