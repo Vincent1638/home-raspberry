@@ -62,7 +62,7 @@ module.exports = class Device {
                                 if (info.combine) {
                                     const data = {}
                                     for (let n = 0; n < info.number; n++) {
-                                        data[i + 1] = command.state
+                                        data[n + 1] = command.state
                                     }
                                     this.tuya.set({ multiple: true, data })
                                 } else {
