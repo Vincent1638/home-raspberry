@@ -11,18 +11,24 @@ module.exports = class Device {
 
     createDevice(info) {
         const tuya = new TuyAPI({ id: info.id, key: info.key, ip: info.ip, version: 3.3 })
-        tuya.start = function () {
-            this.find().then(() => {
-                return this.connect()
-            })
-                .catch(() => {
-                    setTimeout(() => this.start(), 20000)
-                })
+        tuya.start = async function () {
+            try {
+                await this.find()
+                await this.connect()
+                this.refresh()
+            } catch (e) {
+                setTimeout(() => this.start(), 20000)
+            }
         }
         tuya.on('disconnected', () => {
             console.log('Disconnected:', info.id)
             setTimeout(() => tuya.start(), 20000)
         })
+
+        tuya.on('dp-refresh', data => {
+            console.log(data)
+        })
+
         tuya.on('error', () => {
             console.log('Error:', info.id)
         })
