@@ -40,10 +40,11 @@ module.exports = class Device {
                         },
                         toggle: function () {
                             if (info.combine) {
-                                const state = !this.info.state
+                                const data = {}
                                 for (let n = 0; n < info.number; n++) {
-                                    this.tuya.set({ set: state, dps: i + 1 })
+                                    data[n + 1] = !this.info.state
                                 }
+                                this.tuya.set({ multiple: true, data })
                             } else {
                                 this.tuya.set({ set: !this.info.state, dps: i + 1 })
                             }
@@ -59,9 +60,11 @@ module.exports = class Device {
                         command: function (command) {
                             if (command.hasOwnProperty('state')) {
                                 if (info.combine) {
+                                    const data = {}
                                     for (let n = 0; n < info.number; n++) {
-                                        this.tuya.set({ set: command.state, dps: i + 1 })
+                                        data[i + 1] = command.state
                                     }
+                                    this.tuya.set({ multiple: true, data })
                                 } else {
                                     this.tuya.set({ set: command.state, dps: i + 1 })
                                 }
