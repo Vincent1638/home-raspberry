@@ -15,7 +15,7 @@ module.exports = class Device {
             try {
                 await this.find()
                 await this.connect()
-                this.refresh()
+                this.refresh().then(status => console.log(status))
             } catch (e) {
                 setTimeout(() => this.start(), 20000)
             }
@@ -24,11 +24,9 @@ module.exports = class Device {
             console.log('Disconnected:', info.id)
             setTimeout(() => tuya.start(), 20000)
         })
-
         tuya.on('dp-refresh', data => {
             console.log(data)
         })
-
         tuya.on('error', () => {
             console.log('Error:', info.id)
         })
