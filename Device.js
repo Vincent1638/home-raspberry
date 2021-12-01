@@ -30,7 +30,8 @@ module.exports = class Device {
 
         switch (info.type) {
             case 'multioutlet':
-                for (let i = 0; i < info.name.length; i++) {
+                const test = info.combine ? 1 : info.number
+                for (let i = 0; i < test; i++) {
                     const multioutlet = {
                         tuya: tuya,
                         info: {
@@ -38,7 +39,14 @@ module.exports = class Device {
                             image: info.image[i], state: false
                         },
                         toggle: function () {
-                            this.tuya.set({ set: !this.info.state, dps: i + 1 })
+                            if (info.combine) {
+                                const state = !this.info.state
+                                for (let n = 0; n < info.number; n++) {
+                                    this.tuya.set({ set: state, dps: i + 1 })
+                                }
+                            } else {
+                                this.tuya.set({ set: !this.info.state, dps: i + 1 })
+                            }
                         },
                         onMessage: function (data, emit) {
                             if (data.hasOwnProperty(i + 1)) {
@@ -50,9 +58,13 @@ module.exports = class Device {
                         },
                         command: function (command) {
                             if (command.hasOwnProperty('state')) {
-                                this.tuya.set({ set: command.state, dps: i + 1 })
-                                    .catch(() => console.log('Error'))
-
+                                if (info.combine) {
+                                    for (let n = 0; n < info.number; n++) {
+                                        this.tuya.set({ set: command.state, dps: i + 1 })
+                                    }
+                                } else {
+                                    this.tuya.set({ set: command.state, dps: i + 1 })
+                                }
                             }
                         }
                     }
