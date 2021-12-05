@@ -1,6 +1,7 @@
 const credentials = require('./data/credentials.json')
 const { spawn } = require('child_process')
 const Automation = require('./Automation')
+const { getImages } = require('./Images')
 const AppleHome = require('./AppleHome')
 const Device = require('./Device')
 const express = require('express')
@@ -51,6 +52,15 @@ app.get('/add', async (req, res) => {
     const restart = await findNewDevices()
     res.send(restart ? 'Found new devices' : 'No new devices found')
     if (restart) { process.exit(1) }
+})
+
+app.get('/image', async (req, res) => {
+    try {
+        const data = await getImages([req.query.name, req.query.url])
+        res.json(data)
+    } catch (e) {
+        res.sendStatus(400)
+    }
 })
 
 ///////////////////////////////////////////////////////////////////////////////
