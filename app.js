@@ -254,11 +254,8 @@ function getHerokuData() {
             data: d.data,
         }
     })
-    const order = { device: 0, time: 1, sunrise: 2, sunset: 3 }
     automations.sort((a, b) => {
-        const x = order[a.trigger.type]
-        const y = order[b.trigger.type]
-        if (x === y) {
+        if (a.trigger.type === b.trigger.type) {
             switch (a.trigger.type) {
                 case 'device':
                     return a.trigger.device < b.trigger.device ? -1 : 1
@@ -268,7 +265,7 @@ function getHerokuData() {
                     return a.trigger.offset < b.trigger.offset ? -1 : 1
             }
         } else {
-            return x < y ? -1 : 1
+            return a.trigger.type < b.trigger.type ? -1 : 1
         }
     })
     return JSON.stringify({
