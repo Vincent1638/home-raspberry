@@ -261,7 +261,7 @@ function getHerokuData() {
         if (x === y) {
             switch (a.trigger.type) {
                 case 'device':
-                    return a.trigger.type < b.trigger.type ? -1 : 1
+                    return a.trigger.device < b.trigger.device ? -1 : 1
                 case 'time':
                     return a.trigger.time < b.trigger.time ? -1 : 1
                 default:
