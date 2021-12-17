@@ -16,7 +16,9 @@ module.exports = class Device {
                 console.log('Starting connection:', info.id)
                 await this.find()
                 await this.connect()
+                console.log('Connected device:', info.id)
             } catch (e) {
+                console.error('Unable to connect:', info.id, e)
                 setTimeout(() => this.start(), 20000)
             }
         }
