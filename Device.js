@@ -13,6 +13,7 @@ module.exports = class Device {
         const tuya = new TuyAPI({ id: info.id, key: info.key, ip: info.ip, version: 3.3 })
         tuya.start = async function () {
             try {
+                console.log('Starting connection:', info.id)
                 await this.find()
                 await this.connect()
             } catch (e) {
