@@ -32,13 +32,14 @@ module.exports = class AppleHome {
     }
 
     updateAccessory(info) {
+        console.log('Update sent to Apple', info)
         const UUID = uuid.generate(info.id)
         const accessory = this.bridge.bridgedAccessories.find(accessory => accessory.UUID === UUID)
 
         if (info.type == 'dimmer') {
             const service = accessory.getService(Service.Lightbulb)
-            const state = service.getCharacteristic(Characteristic.On);
-            const brightness = service.getCharacteristic(Characteristic.Brightness);
+            const state = service.getCharacteristic(Characteristic.On)
+            const brightness = service.getCharacteristic(Characteristic.Brightness)
             state.updateValue(info.state)
             brightness.updateValue(info.brightness / 10)
         }
@@ -49,7 +50,7 @@ module.exports = class AppleHome {
         }
         else if (info.type == 'sensor') {
             const service = accessory.getService(Service.MotionSensor)
-            const state = service.getCharacteristic(Characteristic.MotionDetected);
+            const state = service.getCharacteristic(Characteristic.MotionDetected)
             state.updateValue(info.state)
         }
         else if (info.type == 'door') {
