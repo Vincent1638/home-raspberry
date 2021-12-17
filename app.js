@@ -348,7 +348,7 @@ async function startServer() {
     appleHome.addAccessories(Device.devices.map(device => device.info))
     appleHome.addAccessories(customDevices)
     appleHome.onCommand = (info) => {
-        console.log('Received command from Apple:', info)
+        console.log('Received command from Apple:', JSON.stringify(info))
         if (info.type === 'garage') {
             garage.send(info)
         } else if (info.type === 'button') {

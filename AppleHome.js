@@ -32,7 +32,7 @@ module.exports = class AppleHome {
     }
 
     updateAccessory(info) {
-        console.log('Update sent to Apple', info)
+        console.log('Update sent to Apple', JSON.stringify(info))
         const UUID = uuid.generate(info.id)
         const accessory = this.bridge.bridgedAccessories.find(accessory => accessory.UUID === UUID)
 

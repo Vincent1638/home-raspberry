@@ -26,8 +26,8 @@ module.exports = class Device {
             console.error('Disconnected:', info.id)
             setTimeout(() => tuya.start(), 20000)
         })
-        tuya.on('error', (e) => {
-            console.error('Error:', info.id, e)
+        tuya.on('error', () => {
+            console.error('Error:', info.id)
         })
         tuya.start()
 
