@@ -13,10 +13,9 @@ module.exports = class Device {
         const tuya = new TuyAPI({ id: info.id, key: info.key, ip: info.ip, version: 3.3 })
         tuya.start = async function () {
             try {
-                console.log('Starting connection:', info.id)
                 await this.find()
                 await this.connect()
-                console.log('Connected device:', info.id)
+                console.log('Connected:', info.name[0])
             } catch (e) {
                 console.error('Unable to connect:', info.id, e)
                 setTimeout(() => this.start(), 20000)
