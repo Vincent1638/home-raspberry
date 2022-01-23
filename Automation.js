@@ -140,7 +140,7 @@ module.exports = class Automation {
                 case 'if': {
                     let deviceinfo = Device.getDevice(item.if.device).info;
                     if (deviceinfo.state == item.if.state) {
-                        Automation.checkSequence(item.then)
+                        await Automation.checkSequence(item.then)
                     }
                 }
                     break
@@ -148,9 +148,9 @@ module.exports = class Automation {
                 case 'ifElse': {
                     let deviceinfo = Device.getDevice(item.if.device).info;
                     if (deviceinfo.state == item.if.state) {
-                        Automation.checkSequence(item.then)
+                        await Automation.checkSequence(item.then)
                     } else {
-                        Automation.checkSequence(item.else)
+                        await Automation.checkSequence(item.else)
                     }
                 }
                     break
