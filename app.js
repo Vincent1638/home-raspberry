@@ -31,6 +31,15 @@ let garage = {
     }
 }
 
+let switches = {
+    ws: {},
+    send(data) {
+        if (this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(data))
+        }
+    }
+}
+
 startServer()
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -78,6 +87,11 @@ server.on('upgrade', function upgrade(request, socket, head) {
         wss.handleUpgrade(request, socket, head, function done(ws) {
             garage.ws = ws
             wss.emit('connection', ws, request, 'Garage')
+        })
+    } else if (deviceId === 'switches') {
+        wss.handleUpgrade(request, socket, head, function done(ws) {
+            switches.ws = ws
+            wss.emit('connection', ws, request, 'Switches')
         })
     } else {
         const name = deviceId ? deviceId : 'Client'
@@ -362,6 +376,7 @@ async function startServer() {
         device.onData = (info, data) => {
             console.log(info.name, data)
             broadcast(info)
+            switches.send(info)
             Automation.check(info, data)
             appleHome.updateAccessory(info)
         }
