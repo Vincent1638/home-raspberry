@@ -25,6 +25,8 @@ module.exports = class AppleHome {
                     return this.createDoor(device)
                 case 'button':
                     return this.createButton(device)
+                case 'switch':
+                    return this.createSwitch(device)
                 case 'garage':
                     return this.createGarage(device)
             }
@@ -55,11 +57,16 @@ module.exports = class AppleHome {
         }
         else if (info.type == 'door') {
             const service = accessory.getService(Service.ContactSensor)
-            const state = service.getCharacteristic(Characteristic.ContactSensorState);
+            const state = service.getCharacteristic(Characteristic.ContactSensorState)
             state.updateValue(info.state)
         }
         else if (info.type == 'button') {
             console.log('TODO: Add update to button')
+        }
+        else if (info.type == 'switch') {
+            const service = accessory.getService(Service.StatefulProgrammableSwitch)
+            const state = service.getCharacteristic(Characteristic.ProgrammableSwitchOutputState)
+            state.updateValue(info.state)
         }
         else if (info.type == 'garage') {
             const states = ['Open', 'Closed', 'Opening', 'Closing']
@@ -145,12 +152,31 @@ module.exports = class AppleHome {
         const service = new Service.StatelessProgrammableSwitch(info.name);
         const characteristic = service.getCharacteristic(Characteristic.ProgrammableSwitchEvent);
 
-        characteristic.on(CharacteristicEventTypes.GET, callback => {
-            callback(undefined, info.state);
-        });
+        // characteristic.on(CharacteristicEventTypes.GET, callback => {
+        //     callback(undefined, info.state);
+        // });
 
         characteristic.on(CharacteristicEventTypes.SET, (value, callback) => {
             this.onCommand({ type: 'button', id: info.id, state: value })
+            callback();
+        });
+
+        accessory.addService(service);
+        return accessory
+    }
+
+    createSwitch(info) {
+        const accessory = new Accessory(info.name, uuid.generate(info.id));
+        const service = new Service.StatefulProgrammableSwitch(info.name);
+        const switchEvent = service.getCharacteristic(Characteristic.ProgrammableSwitchEvent);
+        const outputState = service.getCharacteristic(Characteristic.ProgrammableSwitchOutputState);
+
+        outputState.on(CharacteristicEventTypes.GET, callback => {
+            callback(undefined, info.state);
+        });
+
+        switchEvent.on(CharacteristicEventTypes.SET, (value, callback) => {
+            this.onCommand({ type: 'switch', id: info.id, state: value })
             callback();
         });
 

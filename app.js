@@ -116,6 +116,14 @@ async function handleMessage(ws, message, name) {
         case 'toggleSwitch':
             switches.send(json)
             break
+        case 'updateSwitch':
+            let switchDevice = getCustomDevice(json.id)
+            if (switchDevice) {
+                switchDevice.state = json.state
+                broadcast(switchDevice)
+                appleHome.updateAccessory(switchDevice)
+            }
+            break
         case 'setGarage':
             garage.send(json)
             break
@@ -370,6 +378,8 @@ async function startServer() {
             garage.send(info)
         } else if (info.type === 'button') {
             console.log(info)
+        } else if (info.type === 'switch') {
+            switches.send(info)
         } else {
             Device.getDevice(info.id).command(info)
         }
