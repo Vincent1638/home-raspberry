@@ -64,8 +64,8 @@ module.exports = class AppleHome {
             console.log('TODO: Add update to button')
         }
         else if (info.type == 'switch') {
-            const service = accessory.getService(Service.StatefulProgrammableSwitch)
-            const state = service.getCharacteristic(Characteristic.ProgrammableSwitchOutputState)
+            const service = accessory.getService(Service.Switch)
+            const state = service.getCharacteristic(Characteristic.On);
             state.updateValue(info.state)
         }
         else if (info.type == 'garage') {
