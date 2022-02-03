@@ -66,7 +66,6 @@ module.exports = class AppleHome {
             const service = accessory.getService(Service.Switch)
             const state = service.getCharacteristic(Characteristic.On);
             state.updateValue(info.state)
-            console.log(info)
         }
         else if (info.type == 'garage') {
             const states = ['Open', 'Closed', 'Opening', 'Closing']
