@@ -113,6 +113,9 @@ async function handleMessage(ws, message, name) {
         case 'setDevice':
             Device.getDevice(json.id).command(json)
             break
+        case 'toggleSwitch':
+            switches.send(json)
+            break
         case 'setGarage':
             garage.send(json)
             break
@@ -376,7 +379,6 @@ async function startServer() {
         device.onData = (info, data) => {
             console.log(info.name, data)
             broadcast(info)
-            switches.send(info)
             Automation.check(info, data)
             appleHome.updateAccessory(info)
         }
