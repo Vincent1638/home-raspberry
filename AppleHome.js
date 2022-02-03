@@ -152,10 +152,6 @@ module.exports = class AppleHome {
         const service = new Service.StatelessProgrammableSwitch(info.name);
         const characteristic = service.getCharacteristic(Characteristic.ProgrammableSwitchEvent);
 
-        // characteristic.on(CharacteristicEventTypes.GET, callback => {
-        //     callback(undefined, info.state);
-        // });
-
         characteristic.on(CharacteristicEventTypes.SET, (value, callback) => {
             this.onCommand({ type: 'button', id: info.id, state: value })
             callback();
@@ -167,15 +163,14 @@ module.exports = class AppleHome {
 
     createSwitch(info) {
         const accessory = new Accessory(info.name, uuid.generate(info.id));
-        const service = new Service.StatefulProgrammableSwitch(info.name);
-        const switchEvent = service.getCharacteristic(Characteristic.ProgrammableSwitchEvent);
-        const outputState = service.getCharacteristic(Characteristic.ProgrammableSwitchOutputState);
+        const service = new Service.Switch(info.name);
+        const characteristic = service.getCharacteristic(Characteristic.On);
 
-        outputState.on(CharacteristicEventTypes.GET, callback => {
+        characteristic.on(CharacteristicEventTypes.GET, callback => {
             callback(undefined, info.state);
         });
 
-        switchEvent.on(CharacteristicEventTypes.SET, (value, callback) => {
+        characteristic.on(CharacteristicEventTypes.SET, (value, callback) => {
             this.onCommand({ type: 'switch', id: info.id, state: value })
             callback();
         });
