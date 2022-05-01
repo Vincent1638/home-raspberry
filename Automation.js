@@ -1,166 +1,147 @@
-const axios = require('axios');
-const Device = require('./Device');
+import axios from 'axios'
 
-module.exports = class Automation {
+const sunTimes = {}
+let allDevices = []
+let entries = {}
+let automations = []
+let filteredAutomations = []
+let automationTimeouts = []
 
-    static automations;
-    static sunTimes = {};
+export const setAutomations = async (auto, devices) => {
+    allDevices = devices
+    automations = auto.filter(a => a.enabled)
+    updateTimeAutomations()
 
-    constructor(automations) {
-        let enabledAutomations = []
-        automations.forEach(automation => {
-            if (automation.enabled) {
-                enabledAutomations.push(automation)
+    const midnight = new Date()
+    midnight.setHours(24, 0, 0, 0)
+
+    setTimeout(() => {
+        updateTimeAutomations()
+        setInterval(updateTimeAutomations, 24 * 60 * 60 * 1000)
+    }, midnight.getTime() - Date.now())
+}
+
+const parseTimeString = (time) => {
+    const [hours, minutes] = time.split(':').map(s => parseInt(s))
+    let date = new Date()
+    date.setHours(hours, minutes, 0, 0)
+    return date.getTime()
+}
+
+const getTimes = time => {
+    let times = time.toLowerCase().replace(/\s+/g, '').split('-')
+
+    let start
+    if (times[0] == 'sunrise') start = sunTimes.sunrise
+    else if (times[0] == 'sunset') start = sunTimes.sunset
+    else start = parseTimeString(times[0])
+
+    let end
+    if (times[1] == 'sunrise') end = sunTimes.sunrise
+    else if (times[1] == 'sunset') end = sunTimes.sunset
+    else end = parseTimeString(times[1])
+
+    return { start, end }
+}
+
+const updateTimeAutomations = async () => {
+    const date = new Date()
+    const weekday = date.getDay()
+    filteredAutomations = automations.filter(a => a.weekdays[weekday])
+
+    const response = await axios.get('https://api.sunrise-sunset.org/json?lat=46.114430&lng=-64.847092&formatted=0')
+    sunTimes.sunrise = Date.parse(response.data.results.sunrise)
+    sunTimes.sunset = Date.parse(response.data.results.sunset)
+
+    automationTimeouts.forEach(clearTimeout)
+    automationTimeouts = []
+
+    filteredAutomations.forEach(automation => {
+        let diff = 0
+        switch (automation.trigger.type) {
+            case 'sunset': {
+                const offset = automation.trigger.offset * 1000 || 0
+                diff = sunTimes.sunset - date.getTime() + offset
+            } break
+            case 'sunrise': {
+                const offset = automation.trigger.offset * 1000 || 0
+                diff = sunTimes.sunrise - date.getTime() + offset
+            } break
+            case 'time': {
+                diff = parseTimeString(automation.trigger.time) - date.getTime()
+            } break
+        }
+        if (diff > 0) {
+            automationTimeouts.push(setTimeout(() => {
+                checkSequence(automation.sequence)
+            }, diff))
+        }
+    })
+}
+
+export const checkAutomations = (info, data) => {
+    const time = Date.now()
+    filteredAutomations.forEach(auto => {
+        if (auto.trigger.type == 'device' && auto.trigger.device == info.id && auto.trigger.state == data.state) {
+            const times = getTimes(auto.trigger.time || '00:00 - 24:00')
+            if (
+                (times.start < times.end && times.start <= time && time <= times.end)
+                || (times.start > times.end && (times.start <= time || time <= times.end))
+            ) {
+                checkSequence(auto.sequence)
             }
-        })
+        }
+    })
+}
 
-        Automation.automations = enabledAutomations;
-        Automation.sunAutomations = [];
-        Automation.updateSun();
+const getDevice = id => allDevices.find(device => device.id === id)
 
-        const date = new Date();
-        const midnight = new Date();
-        midnight.setHours(24, 0, 0, 0)
-
-        setTimeout(() => {
-            Automation.updateSun();
-            setInterval(() => { Automation.updateSun() }, 24 * 60 * 60 * 1000);
-        }, midnight - date);
-    }
-
-    static async updateSun() {
-        console.log('Sun automations updated.')
-        const response = await axios.get('https://api.sunrise-sunset.org/json?lat=46.114430&lng=-64.847092&formatted=0');
-        const sunrise = Date.parse(response.data.results.sunrise);
-        const sunset = Date.parse(response.data.results.sunset);
-        const date = Date.now();
-
-        const parseSunrise = new Date(sunrise);
-        const parseSunset = new Date(sunset);
-
-        Automation.sunTimes = {
-            sunrise: parseSunrise.getHours() + parseSunrise.getMinutes() / 60,
-            sunset: parseSunset.getHours() + parseSunset.getMinutes() / 60
-        };
-
-        Automation.sunAutomations.forEach(clearTimeout);
-        Automation.sunAutomations = [];
-
-        Automation.automations.forEach(automation => {
-            let offset;
-            let diff;
-
-            switch (automation.trigger.type) {
-                case 'sunset':
-                    offset = automation.trigger.offset * 1000 || 0;
-                    diff = sunset - date + offset;
-
-                    if (diff > 0) {
-                        Automation.sunAutomations.push(setTimeout(() => {
-                            Automation.checkSequence(automation.sequence)
-                        }, diff));
-                    }
-                    break;
-
-                case 'sunrise':
-                    offset = automation.trigger.offset * 1000 || 0;
-                    diff = sunrise - date + offset;
-
-                    if (diff > 0) {
-                        Automation.sunAutomations.push(setTimeout(() => {
-                            Automation.checkSequence(automation.sequence)
-                        }, diff));
-                    }
-                    break;
-
-                case 'time':
-                    let time = new Date(date);
-                    time.setHours(automation.trigger.time.split(':')[0]);
-                    time.setMinutes(automation.trigger.time.split(':')[1]);
-                    time.setSeconds(0);
-                    diff = time.getTime() - date;
-
-                    if (diff > 0) {
-                        Automation.sunAutomations.push(setTimeout(() => {
-                            Automation.checkSequence(automation.sequence)
-                        }, diff));
-                    }
-                    break;
-            }
-        })
-    }
-
-    static check(info, data) {
-        const date = new Date();
-        const time = date.getHours() + date.getMinutes() / 60;
-        Automation.automations.forEach(auto => {
-            if (auto.trigger.type == 'device' && auto.trigger.device == info.id && auto.trigger.state == data.state) {
-                const times = Automation.parseTimes(auto.trigger.time || '00:00 - 24:00')
-                if (times.start < times.end && times.start <= time && time <= times.end) {
-                    Automation.checkSequence(auto.sequence);
-                } else if (times.start > times.end && (times.start <= time || time <= times.end)) {
-                    Automation.checkSequence(auto.sequence);
+const checkSequence = async parentId => {
+    const parent = entries[parentId]
+    parent.children.forEach(async id => {
+        const entry = entries[id]
+        switch (entry.type) {
+            case 'device':
+                entry.device.forEach(deviceId => {
+                    getDevice(deviceId)?.command(entry)
+                })
+                break
+            case 'wait':
+                await new Promise(resolve => {
+                    setTimeout(resolve, entry.wait * 1000)
+                })
+                break
+            case 'if':
+                if (checkConditions(entry.conditions)) {
+                    await checkSequence(entry.thenSeq)
                 }
-            }
-        })
-    }
+                break
+            case 'ifElse':
+                if (checkConditions(entry.conditions)) {
+                    await checkSequence(entry.thenSeq)
+                } else {
+                    await checkSequence(entry.elseSeq)
+                }
+                break
+        }
+    })
+}
 
-    static parseTimes(triggerTime) {
-        let start;
-        let end;
-        let times = triggerTime.toLowerCase().replace(/\s+/g, '').split('-');
-
-        if (times[0] == 'sunrise') {
-            start = Automation.sunTimes.sunrise
-        } else if (times[0] == 'sunset') {
-            start = Automation.sunTimes.sunset
+const checkConditions = conditions => {
+    const isTrue = []
+    conditions.forEach(c => {
+        if (c.type === 'state') {
+            const state = getDevice(c.device)?.state
+            isTrue.push(c.state === state)
         } else {
-            start = parseInt(times[0].split(':')[0]) + parseInt(times[0].split(':')[1]) / 60;
+            const time = Date.now()
+            const start = parseTimeString(c.start)
+            const end = parseTimeString(c.end)
+            isTrue.push(
+                (start < end && start <= time && time <= end)
+                || (start > end && (start <= time || time <= end))
+            )
         }
-
-        if (times[1] == 'sunrise') {
-            end = Automation.sunTimes.sunrise
-        } else if (times[1] == 'sunset') {
-            end = Automation.sunTimes.sunset
-        } else {
-            end = parseInt(times[1].split(':')[0]) + parseInt(times[1].split(':')[1]) / 60;
-        }
-        return { start, end }
-    }
-
-    static async checkSequence(sequence) {
-        for (let item of sequence) {
-            switch (item.type) {
-                case 'device':
-                    item.device.forEach(id => {
-                        Device.getDevice(id).command(item)
-                    })
-                    break
-
-                case 'if': {
-                    let deviceinfo = Device.getDevice(item.if.device).info;
-                    if (deviceinfo.state == item.if.state) {
-                        await Automation.checkSequence(item.then)
-                    }
-                }
-                    break
-
-                case 'ifElse': {
-                    let deviceinfo = Device.getDevice(item.if.device).info;
-                    if (deviceinfo.state == item.if.state) {
-                        await Automation.checkSequence(item.then)
-                    } else {
-                        await Automation.checkSequence(item.else)
-                    }
-                }
-                    break
-
-                case 'wait':
-                    await new Promise(resolve => {
-                        setTimeout(resolve, item.wait * 1000);
-                    })
-                    break
-            }
-        }
-    }
+    })
+    return isTrue.reduce((a, b) => a && b)
 }

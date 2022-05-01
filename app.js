@@ -1,66 +1,35 @@
-const credentials = require('./data/credentials.json')
-const { spawn } = require('child_process')
-const Automation = require('./Automation')
-const AppleHome = require('./AppleHome')
-const Device = require('./Device')
-const express = require('express')
-const db = require('./Database')
-const WebSocket = require('ws')
-const http = require('http')
-const app = express()
+import { TuyaDevice, Dimmer, Outlet, MultiOutlet, Door, Sensor, Switch, Button, Garage } from './Device.js'
+import { setAutomations, checkAutomations } from './Automation.js'
+import { serverToken } from './credentials.js'
+import { spawn } from 'child_process'
+import AppleHome from './AppleHome.js'
+import express from 'express'
+import * as db from './Database.js'
+import WebSocket from 'ws'
+import { createServer } from 'http'
 
 ///////////////////////////////////////////////////////////////////////////////
 // Initialize 
-const server = http.createServer(app)
+const app = express()
+const server = createServer(app)
 const wss = new WebSocket.Server({ noServer: true })
-const appleHome = new AppleHome('Bridge', '17:51:07:F4:BC:AE', '111-22-333')
+const appleHome = new AppleHome('Bridgetest', '17:51:07:F4:BC:AF', '111-22-333')
 
-const weekday = new Intl.DateTimeFormat('en', { weekday: 'short' })
-const time = new Intl.DateTimeFormat('en', { timeStyle: 'short', hour12: true })
-
-let customDevices = []
-let automations = []
-let tuyaDevices = []
 let heroku = {}
-let garage = {
-    ws: {},
-    send(data) {
-        if (this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify(data))
-        }
-    }
-}
-
-let switches = {
-    ws: {},
-    send(data) {
-        if (this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify(data))
-        }
-    }
-}
-
-startServer()
+const devices = []
+let automations = []
 
 ///////////////////////////////////////////////////////////////////////////////
-// Fine custom devices
-function getCustomDevice(deviceId) {
-    return customDevices.find(({ id }) => id === deviceId)
-}
+// Find devices
+const getDevice = id => devices.find(device => device.id === id)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Broadcast Json to heroku.
-function broadcast(message) {
+const broadcast = message => {
     if (heroku.readyState === WebSocket.OPEN) {
         heroku.send(JSON.stringify(message))
     }
 }
-
-app.get('/add', async (req, res) => {
-    const restart = await findNewDevices()
-    res.send(restart ? 'Found new devices' : 'No new devices found')
-    if (restart) { process.exit(1) }
-})
 
 ///////////////////////////////////////////////////////////////////////////////
 // Handle WebSocket connections
@@ -70,9 +39,9 @@ wss.on('connection', (ws, req, name) => {
     ws.on('message', (message) => handleMessage(ws, message, name))
 })
 
-function startHerokuConnection() {
-    heroku = new WebSocket('wss://home100.herokuapp.com?token=' + credentials.token)
-    heroku.on('open', () => { heroku.send(getHerokuData()); console.log('Connected: Heroku') })
+const startHerokuConnection = () => {
+    heroku = new WebSocket('wss://home100.herokuapp.com?token=' + serverToken)
+    heroku.on('open', () => heroku.send(getHerokuData()))
     heroku.on('message', data => handleMessage(heroku, data, 'Heroku'))
     heroku.on('close', () => setTimeout(startHerokuConnection, 5000))
     heroku.on('error', e => console.log(e))
@@ -82,83 +51,33 @@ function startHerokuConnection() {
 // Handle WebSocket upgrades
 server.on('upgrade', function upgrade(request, socket, head) {
     const url = new URL(request.url, 'http://test.com')
-    const deviceId = url.searchParams.get('id')
-    if (deviceId === 'garage') {
-        wss.handleUpgrade(request, socket, head, function done(ws) {
-            garage.ws = ws
-            wss.emit('connection', ws, request, 'Garage')
-        })
-    } else if (deviceId === 'switches') {
-        wss.handleUpgrade(request, socket, head, function done(ws) {
-            switches.ws = ws
-            wss.emit('connection', ws, request, 'Switches')
-        })
-    } else {
-        const name = deviceId ? deviceId : 'Client'
-        wss.handleUpgrade(request, socket, head, function done(ws) {
-            wss.emit('connection', ws, request, name)
-        })
-    }
+    const deviceId = url.searchParams.get('id') || 'Client'
+
+    wss.handleUpgrade(request, socket, head, function done(ws) {
+        wss.emit('connection', ws, request, deviceId)
+        if (deviceId === 'hub') {
+            const hubDevices = url.searchParams.get('d')
+            hubDevices.split(',').forEach(id => getDevice(id).ws = ws)
+        }
+    })
 })
 
 ///////////////////////////////////////////////////////////////////////////////
 // Handle WebSocket messages
-async function handleMessage(ws, message, name) {
+const handleMessage = async (ws, message, name) => {
     const json = JSON.parse(message)
     console.log(name, json)
     switch (json.event) {
+        case 'toggleSwitch':
         case 'toggleDevice':
-            Device.getDevice(json.id).toggle()
+            getDevice(json.id)?.toggle()
             break
         case 'setDevice':
-            Device.getDevice(json.id).command(json)
-            break
-        case 'toggleSwitch':
-            switches.send(json)
-            break
-        case 'updateSwitch':
-            let switchDevice = getCustomDevice(json.id)
-            if (switchDevice) {
-                switchDevice.state = json.state
-                broadcast(switchDevice)
-                appleHome.updateAccessory(switchDevice)
-            }
-            break
-        case 'setGarage':
-            garage.send(json)
-            break
-        case 'updateGarage':
-            let device = getCustomDevice('garage')
-            if (device) {
-                device.data = json.data
-                device.state = json.state
-                broadcast(device)
-                appleHome.updateAccessory(device)
-            }
-            break
-        case 'updateDoor':
-            let door = getCustomDevice(json.id)
-            if (door && door.state !== json.state) {
-                Automation.check(door, { state: json.state })
-                door.state = json.state
-                broadcast(door)
-                appleHome.updateAccessory(door)
-            }
+            getDevice(json.id)?.command(json)
             break
         case 'updateButton':
-            Automation.check(getCustomDevice(json.id), { state: true })
-            break
-        case 'updateSensor':
-            const sensor = getCustomDevice(json.id)
-            sensor.state = json.state
-            if (!sensor.state) {
-                const date = new Date
-                sensor.data = weekday.format(date) + ' ' + time.format(date)
-                db.updateDeviceInfo(sensor.id, { data: sensor.data })
-            }
-            Automation.check(sensor, { state: sensor.state })
-            broadcast(sensor)
-            appleHome.updateAccessory(sensor)
+        case 'updateDevice':
+            getDevice(json.id)?.onMessage(json)
             break
         case 'findDevices':
             findNewDevices().then(found => {
@@ -263,22 +182,9 @@ setInterval(() => {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send device info to Heroku
-function getHerokuData() {
-    const deviceData = []
-    Device.devices.forEach(({ info }) => {
-        deviceData.push(info)
-    })
-    const states = deviceData.concat(customDevices).map(d => {
-        return {
-            id: d.id,
-            name: d.name,
-            type: d.type,
-            image: d.image,
-            state: d.state,
-            brightness: d.brightness,
-            data: d.data,
-        }
-    })
+const getHerokuData = () => {
+    const states = devices.map(d => d.getInfo())
+    const tuyaDevices = devices.filter(d => !d.custom).map(d => d.getInfo())
     automations.sort((a, b) => {
         if (a.trigger.type === b.trigger.type) {
             switch (a.trigger.type) {
@@ -301,7 +207,7 @@ function getHerokuData() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Scan for unregistered devices
-function findNewDevices() {
+const findNewDevices = () => {
     console.log('Searching for devices')
     return new Promise((resolve) => {
         const ls = spawn('tuya-cli', ['wizard', '-s'])
@@ -317,16 +223,16 @@ function findNewDevices() {
                 let deviceIps = []
 
                 const foundDevices = JSON.parse(data.toString())
-                const newDevices = foundDevices.filter(d => !tuyaDevices.find(({ id }) => d.id === id))
+                const newDevices = foundDevices.filter(d => !devices.find(({ id }) => d.id === id))
 
                 if (newDevices.length > 0) {
                     console.log('Found new devices, serching for device IPs')
-                    deviceIps = await Device.findIps(newDevices[0])
+                    deviceIps = await TuyaDevice.findIps(newDevices[0])
                 }
 
                 const promises = []
                 foundDevices.forEach(device => {
-                    const d = tuyaDevices.find(({ id }) => device.id === id)
+                    const d = devices.find(({ id }) => device.id === id)
                     if (d === undefined) {
                         const ip = deviceIps[device.id]
                         if (ip) {
@@ -355,41 +261,54 @@ function findNewDevices() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Start server
-async function startServer() {
-    tuyaDevices = await db.getDevices(false)
-    customDevices = await db.getDevices(true)
+const startServer = async () => {
+    const deviceSettings = await db.getDevices()
     automations = await db.getAutomations()
 
-    customDevices.forEach(d => {
-        d.name = d.name[0]
-        d.image = d.image[0]
-        d.state = false
-        delete d.custom
-    })
-
-    new Automation(automations)
-    new Device(tuyaDevices)
-
-    appleHome.addAccessories(Device.devices.map(device => device.info))
-    appleHome.addAccessories(customDevices)
-    appleHome.onCommand = (info) => {
-        console.log('Received command from Apple:', JSON.stringify(info))
-        if (info.type === 'garage') {
-            garage.send(info)
-        } else if (info.type === 'button') {
-            console.log(info)
-        } else if (info.type === 'switch') {
-            switches.send(info)
-        } else {
-            Device.getDevice(info.id).command(info)
+    deviceSettings.forEach(device => {
+        switch (device.type) {
+            case 'dimmer':
+                devices.push(new Dimmer(device))
+                break
+            case 'outlet':
+                devices.push(new Outlet(device))
+                break
+            case 'multioutlet':
+                const num = device.combine ? 1 : device.number
+                const tuya = new TuyaDevice(device)
+                for (let i = 0; i < num; i++) {
+                    devices.push(new MultiOutlet(device, tuya, i))
+                }
+                break
+            case 'door':
+                devices.push(new Door(device))
+                break
+            case 'sensor':
+                devices.push(new Sensor(device))
+                break
+            case 'switch':
+                devices.push(new Switch(device))
+                break
+            case 'button':
+                devices.push(new Button(device))
+                break
+            case 'garage':
+                devices.push(new Garage(device))
+                break
         }
+    })
+    setAutomations(automations, devices)
+    appleHome.addAccessories(devices.map(device => device.getInfo()))
+    appleHome.onCommand = (info) => {
+        console.log('Apple:', JSON.stringify(info))
+        getDevice(info.id)?.command(info)
     }
 
-    Device.devices.forEach(device => {
+    devices.forEach(device => {
         device.onData = (info, data) => {
-            console.log(info.name, data)
+            console.log(info.id, data)
             broadcast(info)
-            Automation.check(info, data)
+            checkAutomations(info, data)
             appleHome.updateAccessory(info)
         }
     })
@@ -398,5 +317,7 @@ async function startServer() {
     server.listen(port, () => {
         console.log(`Server listening at http://192.168.2.90:${port}`)
     })
-    startHerokuConnection()
+    // startHerokuConnection()
 }
+
+startServer()
