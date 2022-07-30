@@ -30,7 +30,7 @@ module.exports = class Automation {
 
     static async updateSun() {
         console.log('Sun automations updated.')
-        const response = await axios.get('https://api.sunrise-sunset.org/json?lat=46.114430&lng=-64.847092&formatted=0');
+        const response = await axios.get('http://api.sunrise-sunset.org/json?lat=46.114430&lng=-64.847092&formatted=0');
         const sunrise = Date.parse(response.data.results.sunrise);
         const sunset = Date.parse(response.data.results.sunset);
         const date = Date.now();
