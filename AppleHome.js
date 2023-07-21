@@ -1,7 +1,6 @@
-import hap from 'hap-nodejs'
-const { Accessory, Characteristic, Categories, CharacteristicEventTypes, Service, Bridge, uuid } = hap
+const { Accessory, Characteristic, Categories, CharacteristicEventTypes, Service, Bridge, uuid } = require("hap-nodejs");
 
-export default class AppleHome {
+module.exports = class AppleHome {
     constructor(name, username, pincode) {
         this.bridge = new Bridge(name, uuid.generate(name))
         this.bridge.publish({

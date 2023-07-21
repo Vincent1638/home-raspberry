@@ -1,0 +1,56 @@
+doctype html
+html
+  head
+    title Home
+    meta(name='viewport' content='width=device-width, initial-scale=0.8, user-scalable=0')
+    link(rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png")
+    link(rel="mask-icon" href="/images/safari-pinned-tab.svg" color="#0d47a1")
+    link(rel="shortcut icon" href="/images/favicon.ico")
+    link(rel="stylesheet" href="main.css")
+  body(class='dark-mode')
+    .toast
+    .nav
+      a(href='/' style='font-size:xx-large;' data-link) Home
+      div
+      div
+      div
+      a#mode
+        svg(xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="width: 20px")
+          path(fill="#ffffff" d="M256 56c110.549 0 200 89.468 200 200 0 110.549-89.468 200-200 200-110.549 0-200-89.468-200-200 0-110.549 89.468-200 200-200m0-48C119.033 8 8 119.033 8 256s111.033 248 248 248 248-111.033 248-248S392.967 8 256 8zm0 96c-83.947 0-152 68.053-152 152s68.053 152 152 152V104z")
+      a(href='/login') Login
+    div(style='margin: 150px auto 0 auto; max-width: 300px')
+      .panel
+        form#login
+          input(type="text" name="username" placeholder="Username")
+          input(type="password" name="password" placeholder="Password")
+          input.button(type="submit" value="Login" style='margin: 10px 0 0 0;')
+    script.
+      document.querySelector('#mode').addEventListener('click', () => {
+          document.body.classList.toggle('dark-mode')
+      })
+      let form = document.getElementById('login');
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        fetch(location.origin + '/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: form['username'].value,
+            password: form['password'].value
+          })
+        })
+          .then(response => {
+            if (response.status == 200) {
+              window.location = location.origin
+            } else {
+              var toast = document.querySelector('.toast')
+              toast.innerText = 'Incorrect Credentials'
+              toast.classList.add('active')
+              setTimeout(() => toast.classList.remove('active'), 1500)
+            }
+          })
+          .catch(err => console.log(err))
+      });
+      

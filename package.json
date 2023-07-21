@@ -1,30 +1,42 @@
 {
-  "name": "home-raspberry",
+  "name": "home",
   "version": "1.0.0",
   "description": "Server for raspberry pi",
   "main": "app.js",
-  "type": "module",
   "scripts": {
-    "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack",
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Vincent1638/home-raspberry.git"
+    "url": "git+https://github.com/Vincent1638/home.git"
   },
   "author": "Adam Vincent",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Vincent1638/home-raspberry/issues"
+    "url": "https://github.com/Vincent1638/home/issues"
   },
-  "homepage": "https://github.com/Vincent1638/home-raspberry#readme",
+  "homepage": "https://github.com/Vincent1638/home#readme",
   "dependencies": {
     "axios": "^0.21.1",
     "debug": "^2.6.9",
-    "express": "4.17.1",
+    "express": "^4.17.1",
     "firebase-admin": "^10.0.0",
     "hap-nodejs": "^0.9.7",
     "tuyapi": "6.1.5",
-    "ws": "^7.5.2"
+    "ws": "^7.5.2",
+    "cookie": "^0.4.0",
+    "jsonwebtoken": "^8.5.1",
+    "pug": "^3.0.2"
+  },
+  "devDependencies": {
+    "css-loader": "^6.2.0",
+    "css-minimizer-webpack-plugin": "^3.1.1",
+    "mini-css-extract-plugin": "^2.4.3",
+    "style-loader": "^3.2.1",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.4.4",
+    "webpack": "^5.52.0",
+    "webpack-cli": "^4.8.0"
   }
 }

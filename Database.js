@@ -1,55 +1,78 @@
-import { initializeApp, cert } from 'firebase-admin/app'
-import { getDatabase } from 'firebase-admin/database'
-import { firebaseToken } from './credentials.js'
+const { initializeApp, cert } = require('firebase-admin/app')
+const { getFirestore } = require('firebase-admin/firestore')
+const { firebase } = require('./credentials.json')
 
-initializeApp({
-    credential: cert(firebaseToken),
-    databaseURL: "https://home-9a55b-default-rtdb.firebaseio.com"
-})
+initializeApp({ credential: cert(firebase) })
 
-const db = getDatabase()
-const usersRef = db.ref('users')
-const devicesRef = db.ref('devices')
-const automationsRef = db.ref('automations')
+const db = getFirestore()
+const usersRef = db.collection('users')
+const imagesRef = db.collection('images')
+const devicesRef = db.collection('devices')
+const automationsRef = db.collection('automations')
 
-export const updateUserData = (username, data) => {
-    return usersRef.child(username).update(data)
+const addImage = (type, name, svg) => {
+  return imagesRef.doc(type).set({ name, svg })
 }
 
-export const getUserData = (username) => {
-    return new Promise(resolve => {
-        usersRef.child(username).on('value', data => resolve(data.val()))
-    })
+const getImages = async () => {
+  const snapshot = await imagesRef.get()
+  return snapshot.docs.map(doc => doc.data())
 }
 
-export const getDevices = () => {
-    return new Promise(resolve => {
-        devicesRef.on('value', data => resolve(data.val()))
-    })
+const updateUserData = (username, data) => {
+  return usersRef.doc(username).update(data)
 }
 
-export const upsertDevice = async (device, custom) => {
-    return devicesRef.child(device.id).update({ ...device, custom })
+const getUserData = async username => {
+  const doc = await usersRef.doc(username).get()
+  return doc.data()
 }
 
-export const deleteDevice = (id) => {
-    return devicesRef.child(id).remove()
+const getDevices = async custom => {
+  const snapshot = await devicesRef.where('custom', '==', custom).get()
+  return snapshot.docs.map(doc => doc.data())
 }
 
-export const updateDeviceInfo = (id, info) => {
-    return devicesRef.child(id).update(info)
+const upsertDevice = async (device, custom) => {
+  return devicesRef.doc(device.id).set({ ...device, custom }, { merge: true })
 }
 
-export const getAutomations = () => {
-    return new Promise(resolve => {
-        automationsRef.on('value', data => resolve(data.val()))
-    })
+const deleteDevice = id => {
+  return devicesRef.doc(id).delete()
 }
 
-export const deleteAutomation = (id) => {
-    return automationsRef.child(id).remove()
+const updateDeviceInfo = (id, info) => {
+  return devicesRef.doc(id).update(info)
 }
 
-export const upsertAutomation = async (automation) => {
-    return automationsRef.child(automation.id).set(automation)
+const getAutomations = async () => {
+  const snapshot = await automationsRef.get()
+  return snapshot.docs.map(doc => doc.data())
+}
+
+const deleteAutomation = id => {
+  return automationsRef.doc(id).delete()
+}
+
+const upsertAutomation = async automation => {
+  if (automation.id !== '') {
+    return automationsRef.doc(automation.id).set(automation)
+  } else {
+    const { id } = await automationsRef.add(automation)
+    return automationsRef.doc(id).update({ id })
+  }
+}
+
+module.exports = {
+  addImage,
+  getImages,
+  updateUserData,
+  getUserData,
+  getDevices,
+  upsertDevice,
+  deleteDevice,
+  updateDeviceInfo,
+  getAutomations,
+  upsertAutomation,
+  deleteAutomation,
 }
